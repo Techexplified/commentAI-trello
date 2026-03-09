@@ -112,7 +112,7 @@ if (ui.generateBtn) {
             });
 
             const response = await fetch(
-                "https://your-backend-url/generate",
+                "https://trello-commentai.onrender.com/generate",
                 {
                     method: "POST",
                     body: formData

@@ -15,74 +15,60 @@ Generate AI response
 */
 
 app.post("/generate", upload.array("screenshots"), async (req, res) => {
+  try {
 
-    try {
+    const prompt = req.body?.prompt;
+    const apiKey = req.body?.apiKey;
 
-        const { prompt, apiKey } = req.body;
-
-        if (!apiKey)
-            return res.status(400).json({ error: "Missing API key" });
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash"
-        });
-
-        const parts = [
-            {
-                text: `
-You are an assistant that converts rough developer comments
-into clean Trello card comments.
-
-Rules:
-- Make the comment clear
-- Friendly tone
-- Structured
-- Easy to understand
-- Suggest improvements if needed
-
-User Input:
-${prompt}
-`
-            }
-        ];
-
-        /*
-        Add screenshots if provided
-        */
-
-        if (req.files && req.files.length > 0) {
-
-            req.files.forEach(file => {
-
-                parts.push({
-                    inlineData: {
-                        data: file.buffer.toString("base64"),
-                        mimeType: file.mimetype
-                    }
-                });
-
-            });
-
-        }
-
-        const result = await model.generateContent(parts);
-
-        const text = result.response.text();
-
-        res.json({ text });
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            error: "AI generation failed"
-        });
-
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
     }
 
+    if (!apiKey) {
+      return res.status(400).json({ error: "API key missing" });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash"
+    });
+
+    const parts = [{ text: prompt }];
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        parts.push({
+          inlineData: {
+            data: file.buffer.toString("base64"),
+            mimeType: file.mimetype
+          }
+        });
+      });
+    }
+
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: parts
+        }
+      ]
+    });
+
+    const text = result.response.text();
+
+    res.json({ text });
+
+  } catch (err) {
+
+    console.error("AI ERROR:", err);
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
 });
 
 const PORT = process.env.PORT || 3000;
