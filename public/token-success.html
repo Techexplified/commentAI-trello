@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://p.trellocdn.com/power-up.min.js"></script>
+</head>
+<body>
+    <div style="text-align: center; font-family: sans-serif; padding-top: 20px;">
+        <p>Authorization successful! Closing window...</p>
+    </div>
+
+    <script>
+        let token = null;
+
+        /* CASE 1: Trello sends token in hash */
+        if (window.location.hash.includes("token=")) {
+            token = window.location.hash.replace("#token=", "");
+        }
+        /* CASE 2: Trello sends token as path */
+        else {
+            token = window.location.pathname.replace("/", "");
+        }
+
+        if (token) {
+            // 1. Save to localStorage so t.authorize() in section.js can resolve
+            localStorage.setItem('token', token);
+            
+            // 2. Fallback for older Trello library versions
+            if (window.opener && typeof window.opener.authorize === "function") {
+                window.opener.authorize(token);
+            }
+        }
+
+        // 3. Close the popup to return to the board
+        setTimeout(() => {
+            window.close();
+        }, 500);
+    </script>
+</body>
+</html>
