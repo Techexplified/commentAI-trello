@@ -1,81 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<script src="https://p.trellocdn.com/power-up.min.js"></script>
-</head>
-
-<body>
-
-<script>
 const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
 
 window.TrelloPowerUp.initialize({
 
-  /* CARD BUTTON */
-  'card-buttons': function(t, options) {
-    return [{
-      icon: ICON,
-      text: 'Comment AI',
-      callback: function(t) {
-        return t.popup({
-          title: 'Comment AI',
-          url: './settings.html',
-          height: 250
-        });
-      }
-    }];
-  },
+/* CARD BUTTON (Toggle) */
+'card-buttons': function(t, options) {
 
-  /* BOARD BUTTON */
-  'board-buttons': function(t, options) {
-    return [{
-      icon: ICON,
-      text: 'Comment AI',
-      callback: function(t) {
-        return t.popup({
-          title: 'Comment AI Settings',
-          url: './settings.html',
-          height: 250
-        });
-      }
-    }];
-  },
+  return t.get('card', 'shared', 'commentAIVisible', false)
+    .then(function(isVisible){
 
-  /* CARD SECTION */
-  'card-back-section': function(t, options) {
-    return {
-      title: 'Comment AI',
-      icon: ICON,
-      content: {
-        type: 'iframe',
-        url: t.signUrl('./section.html'),
-        height: 400
-      },
-      action: {
-        text: 'Settings',
-        callback: function(t) {
-          return t.popup({
-            title: 'Comment AI Settings',
-            url: './settings.html',
-            height: 250
-          });
+      return [{
+        icon: ICON,
+        text: isVisible ? 'Remove Comment AI' : 'Add Comment AI',
+
+        callback: function(t){
+
+          return t.set('card', 'shared', 'commentAIVisible', !isVisible)
+            .then(function(){
+              return t.reload(); // refresh card UI
+            });
+
         }
-      }
-    };
-  },
+      }];
 
-  /* SETTINGS */
-  'show-settings': function(t, options) {
-    return t.popup({
-      title: 'Comment AI Settings',
-      url: './settings.html',
-      height: 250
     });
-  }
+
+},
+
+/* CARD SECTION */
+'card-back-section': function(t, options){
+
+  return t.get('card','shared','commentAIVisible',false)
+    .then(function(isVisible){
+
+      if(!isVisible){
+        return null; // hide section
+      }
+
+      return {
+        title: 'Comment AI',
+        icon: ICON,
+        content: {
+          type: 'iframe',
+          url: t.signUrl('./section.html'),
+          height: 400
+        }
+      };
+
+    });
+
+},
+
+/* SETTINGS (only for board menu) */
+'show-settings': function(t, options) {
+  return t.popup({
+    title: 'Comment AI Settings',
+    url: './settings.html',
+    height: 250
+  });
+}
 
 });
-</script>
-
-</body>
-</html>
