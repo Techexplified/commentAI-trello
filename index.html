@@ -6,12 +6,13 @@
 </head>
 
 <body>
-<script>
+
+    <script>
 const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
 
 window.TrelloPowerUp.initialize({
 
-/* BOARD BUTTON → API KEY SETTINGS */
+/* BOARD BUTTON → API SETTINGS */
 'board-buttons': function(t) {
   return [{
     icon: ICON,
@@ -26,10 +27,10 @@ window.TrelloPowerUp.initialize({
   }];
 },
 
-/* CARD BUTTON → ADD / REMOVE COMMENT AI */
-'card-buttons': function(t) {
+/* POWER-UPS MENU TOGGLE */
+'card-buttons': function(t){
 
-  return t.get('card','shared','commentAIEnabled',false)
+  return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
 
     return [{
@@ -40,7 +41,7 @@ window.TrelloPowerUp.initialize({
 
         return t.set('card','shared','commentAIEnabled', !enabled)
         .then(function(){
-          return t.reload(); // refresh card UI
+          return t.reload();
         });
 
       }
@@ -50,10 +51,10 @@ window.TrelloPowerUp.initialize({
 
 },
 
-/* CARD BACK SECTION → COMMENT AI UI */
+/* COMMENT AI SECTION */
 'card-back-section': function(t){
 
-  return t.get('card','shared','commentAIEnabled',false)
+  return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
 
     if(!enabled){
@@ -67,6 +68,16 @@ window.TrelloPowerUp.initialize({
         type: 'iframe',
         url: t.signUrl('./section.html'),
         height: 400
+      },
+      action: {
+        text: 'Settings',
+        callback: function(t) {
+          return t.popup({
+            title: 'Comment AI Settings',
+            url: './settings.html',
+            height: 250
+          });
+        }
       }
     };
 
@@ -74,7 +85,7 @@ window.TrelloPowerUp.initialize({
 
 },
 
-/* SETTINGS (Board Menu → PowerUps → Settings) */
+/* BOARD MENU SETTINGS */
 'show-settings': function(t) {
   return t.popup({
     title: 'Comment AI Settings',
