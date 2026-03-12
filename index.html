@@ -1,54 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
+<meta charset="UTF-8">
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
 </head>
-<body>
-    <script type="module">
-        const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
 
-        window.TrelloPowerUp.initialize({
-            'board-buttons': function(t, options) {
-            return [{
-                icon: ICON,
-                text: 'Comment AI', // This text appears next to the icon
-                callback: function(t) {
-                    return t.popup({
-                        title: 'Comment AI Settings',
-                        url: './settings.html',
-                        height: 250
-                    });
-                }
-            }];
-        },
-            'card-back-section': function(t, options) {
-            return {
-                title: 'Comment AI',
-                icon: ICON,
-                content: {
-                    type: 'iframe',
-                    url: t.signUrl('./section.html'),
-                    height: 400
-                },
-                action: {
-                    text: 'Settings',
-                    callback: (t) => t.popup({
-                        title: 'Comment AI Settings',
-                        url: './settings.html',
-                        height: 250
-                    })
-                }
-            };
-        },
-            'show-settings': function(t, options) {
-                return t.popup({
-                    title: 'Comment AI Settings',
-                    url: './settings.html',
-                    height: 250
-                });
-            }
+<body>
+
+<script>
+const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
+
+window.TrelloPowerUp.initialize({
+
+  /* CARD BUTTON */
+  'card-buttons': function(t, options) {
+    return [{
+      icon: ICON,
+      text: 'Comment AI',
+      callback: function(t) {
+        return t.popup({
+          title: 'Comment AI',
+          url: './settings.html',
+          height: 250
         });
-    </script>
+      }
+    }];
+  },
+
+  /* BOARD BUTTON */
+  'board-buttons': function(t, options) {
+    return [{
+      icon: ICON,
+      text: 'Comment AI',
+      callback: function(t) {
+        return t.popup({
+          title: 'Comment AI Settings',
+          url: './settings.html',
+          height: 250
+        });
+      }
+    }];
+  },
+
+  /* CARD SECTION */
+  'card-back-section': function(t, options) {
+    return {
+      title: 'Comment AI',
+      icon: ICON,
+      content: {
+        type: 'iframe',
+        url: t.signUrl('./section.html'),
+        height: 400
+      },
+      action: {
+        text: 'Settings',
+        callback: function(t) {
+          return t.popup({
+            title: 'Comment AI Settings',
+            url: './settings.html',
+            height: 250
+          });
+        }
+      }
+    };
+  },
+
+  /* SETTINGS */
+  'show-settings': function(t, options) {
+    return t.popup({
+      title: 'Comment AI Settings',
+      url: './settings.html',
+      height: 250
+    });
+  }
+
+});
+</script>
+
 </body>
 </html>
