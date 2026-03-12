@@ -4,7 +4,6 @@ import multer from "multer";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
-
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
@@ -12,8 +11,12 @@ const upload = multer({
 app.use(cors());
 app.use(express.json());
 
-app.post("/generate", upload.array("screenshots"), async (req, res) => {
+/*
+ENDPOINT
+Generate AI response
+*/
 
+app.post("/generate", upload.array("screenshots"), async (req, res) => {
   try {
 
     const prompt = req.body?.prompt;
@@ -25,10 +28,6 @@ app.post("/generate", upload.array("screenshots"), async (req, res) => {
 
     if (!apiKey) {
       return res.status(400).json({ error: "API key missing" });
-    }
-
-    if (prompt.length > 4000) {
-      return res.status(400).json({ error: "Prompt too long" });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -54,16 +53,14 @@ app.post("/generate", upload.array("screenshots"), async (req, res) => {
       contents: [
         {
           role: "user",
-          parts
+          parts: parts
         }
       ]
     });
 
-    const text = result?.response?.text?.() || "";
+    const text = result.response.text();
 
-    res.json({
-      text: text || "AI couldn't generate a response."
-    });
+    res.json({ text });
 
   } catch (err) {
 
@@ -74,7 +71,6 @@ app.post("/generate", upload.array("screenshots"), async (req, res) => {
     });
 
   }
-
 });
 
 const PORT = process.env.PORT || 3000;

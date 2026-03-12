@@ -38,6 +38,7 @@ window.addEventListener("load", resize);
 
 if (ui.userInput) {
   ui.userInput.addEventListener("input", resize);
+  ui.aiOutput.addEventListener("input", resize);
 }
 
 /* -------------------------
@@ -161,7 +162,7 @@ ui.generateBtn.onclick = async () => {
 
     const data = await response.json();
 
-    ui.aiOutput.innerText = data.text || "No response returned.";
+    ui.aiOutput.value = data.text || "No response returned.";
 
     ui.outputSection.classList.remove("hidden");
 
@@ -221,7 +222,7 @@ function copyText(text) {
 
 if (ui.copyBtn) {
   ui.copyBtn.onclick = () => {
-    copyText(ui.aiOutput.innerText);
+   copyText(ui.aiOutput.value);
   };
 }
 
@@ -251,7 +252,7 @@ async function getToken() {
 
 async function insertComment() {
 
-  const text = ui.aiOutput.innerText;
+  const text = ui.aiOutput.value;
   if (!text) return;
 
   const token = await getToken();
@@ -281,7 +282,7 @@ ui.insertBtn.onclick = insertComment;
 if (ui.insertDescBtn) {
 ui.insertDescBtn.onclick = async () => {
 
-  const text = ui.aiOutput.innerText;
+  const text = ui.aiOutput.value;
   if (!text) return;
 
   const token = await getToken();
