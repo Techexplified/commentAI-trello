@@ -108,84 +108,80 @@ if (ui.screenshotBtn) ui.screenshotBtn.addEventListener("click", openFilePicker)
 --------------------------*/
 
 if (ui.generateBtn) {
+ui.generateBtn.onclick = async () => {
 
-  ui.generateBtn.onclick = async () => {
+  const promptText = ui.userInput.value.trim();
 
-    const promptText = ui.userInput.value.trim();
+  if (!promptText) {
+    return t.alert({
+      message: "Please type something first!",
+      duration: 2
+    });
+  }
 
-    if (!promptText) {
-      return t.alert({
-        message: "Please type something first!",
-        duration: 2
-      });
-    }
+  const apiKey = await t.get("member", "private", "apiKey");
 
-    ui.outputSection.classList.add("hidden");
-    processingScreen.classList.remove("hidden");
+  if (!apiKey) {
 
-    ui.generateBtn.disabled = true;
+    t.alert({
+      message: "Please configure your API key.",
+      duration: 3
+    });
 
-    processingScreenshots.innerText =
-      uploadedFiles.length + " screenshots uploaded";
+    return t.popup({
+      title: "Comment AI Settings",
+      url: "./settings.html",
+      height: 250
+    });
+  }
 
-    processingChars.innerText =
-      promptText.length + " characters of context provided";
+  ui.outputSection.classList.add("hidden");
+  processingScreen.classList.remove("hidden");
+  ui.generateBtn.disabled = true;
 
+  resize();
+
+  try {
+
+    const formData = new FormData();
+    formData.append("prompt", promptText);
+    formData.append("apiKey", apiKey);
+
+    uploadedFiles.forEach(file => {
+      formData.append("screenshots", file);
+    });
+
+    const response = await fetch(
+      "https://trello-commentai.onrender.com/generate",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    const data = await response.json();
+
+    ui.aiOutput.innerText = data.text || "No response returned.";
+
+    ui.outputSection.classList.remove("hidden");
+
+  } catch (err) {
+
+    console.error(err);
+
+    t.alert({
+      message: "Service temporarily unavailable.",
+      duration: 5
+    });
+
+  } finally {
+
+    processingScreen.classList.add("hidden");
+    ui.generateBtn.disabled = false;
     resize();
+  }
 
-    try {
-
-      const apiKey = await t.get("member", "private", "apiKey");
-
-      const formData = new FormData();
-
-      formData.append("prompt", promptText);
-      formData.append("apiKey", apiKey || "");
-
-      uploadedFiles.forEach(file => {
-        formData.append("screenshots", file);
-      });
-
-      const response = await fetch(
-        "https://trello-commentai.onrender.com/generate",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
-
-      const data = await response.json();
-
-      const cleanText = (data.text || "")
-        .replace(/\*\*/g, "")
-        .replace(/\*/g, "")
-        .trim();
-
-      ui.aiOutput.innerText = cleanText || "No response returned.";
-
-      ui.outputSection.classList.remove("hidden");
-
-      resize();
-
-    } catch (err) {
-
-      console.error(err);
-
-      t.alert({
-        message: "Service temporarily unavailable.",
-        duration: 5
-      });
-
-    } finally {
-
-      processingScreen.classList.add("hidden");
-
-      ui.generateBtn.disabled = false;
-      ui.generateBtn.innerText = "Ask Comment AI";
-
-      resize();
-    };
-  };
+};
 }
 
 /* -------------------------
