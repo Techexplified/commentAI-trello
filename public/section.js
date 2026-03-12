@@ -308,3 +308,55 @@ ui.insertDescBtn.onclick = async () => {
   });
 };
 }
+
+
+/* -------------------------
+   ENTER TO SEND
+--------------------------*/
+
+ui.userInput.addEventListener("keydown", function (e) {
+
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+
+    if (!ui.generateBtn.disabled) {
+      ui.generateBtn.click();
+    }
+  }
+
+});
+
+/* -------------------------
+   QUICK ACTIONS
+--------------------------*/
+
+const suggestBtn = document.getElementById("suggestBtn");
+const subtasksBtn = document.getElementById("subtasksBtn");
+
+if (suggestBtn) {
+
+  suggestBtn.onclick = () => {
+
+    const text = ui.userInput.value.trim();
+
+    ui.userInput.value =
+      "Suggest improvements for the following task or description:\n\n" + text;
+
+    ui.generateBtn.click();
+  };
+
+}
+
+if (subtasksBtn) {
+
+  subtasksBtn.onclick = () => {
+
+    const text = ui.userInput.value.trim();
+
+    ui.userInput.value =
+      "Break this task into clear actionable subtasks:\n\n" + text;
+
+    ui.generateBtn.click();
+  };
+
+}
