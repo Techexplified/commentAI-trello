@@ -153,7 +153,7 @@ ui.generateBtn.onclick = async () => {
     });
 
     const response = await fetch(
-      "https://trello-commentai.onrender.com/generate",
+      "https://commentai-trello.onrender.com/generate",
       {
         method: "POST",
         body: formData
