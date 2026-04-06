@@ -12,11 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* Base styles */
+        /* Match Trello's Dark Theme Colors */
         body {
             background-color: transparent;
             color: #b6c2cf;
-            font-family: 'Poppins', sans-serif;
+            /* CHANGED FONT TO POPPINS */
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Noto Sans", sans-serif;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -25,178 +26,132 @@
         .ai-container {
             background: #1d2125;
             padding: 16px;
-            border-radius: 8px;
-        }
-
-        /* Input Container (Figma Design) */
-        .input-box {
-            background-color: #22272b;
             border: 1px solid #38414a;
             border-radius: 8px;
-            overflow: hidden;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .input-box:focus-within {
-            border-color: #579dff;
-            box-shadow: 0 0 0 1px #579dff;
+            transition: all 0.2s ease;
         }
 
         textarea {
-            width: 100%;
-            background: transparent;
-            color: #eceff4;
-            border: none;
-            padding: 12px;
-            font-size: 13px;
+            background: #22272b !important;
+            border: 1px solid #454f59 !important;
+            color: #eceff4 !important;
             resize: none;
+        }
+
+        textarea:focus {
+            border-color: #579dff !important;
             outline: none;
-            min-height: 80px;
+            box-shadow: 0 0 0 1px #579dff;
         }
 
-        textarea::placeholder {
-            color: #8c9bab;
-        }
-
-        .input-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            border-top: 1px solid #38414a;
-            background-color: #22272b;
-        }
-
-        /* Buttons */
-        .toolbar-btn {
+        .quick-action-btn {
+            background: #2c333a;
+            border: 1px solid #454f59;
+            color: #b6c2cf;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #8c9bab;
-            font-size: 12px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
         }
 
-        .toolbar-btn:hover {
-            color: #eceff4;
-            background-color: #2c333a;
+        .quick-action-btn:hover {
+            background: #38414a;
         }
 
         .primary-btn {
-            background-color: #00c2e0; /* Trello/Figma teal color */
+            background: #579dff;
             color: #1d2125;
             font-weight: 600;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 16px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            transition: background 0.2s;
         }
 
         .primary-btn:hover {
-            opacity: 0.9;
+            background: #85b8ff;
         }
 
         .primary-btn:disabled {
-            background-color: #38414a;
+            background: #38414a;
             color: #8c9bab;
             cursor: not-allowed;
         }
 
-        /* Quick Action Pills */
-        .quick-action-pill {
-            background-color: #2c333a;
-            border: 1px solid transparent;
-            color: #b6c2cf;
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        /* Custom scrollbar for output */
+        #aiOutput::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #aiOutput::-webkit-scrollbar-track {
+            background: #1d2125;
+        }
+
+        #aiOutput::-webkit-scrollbar-thumb {
+            background: #454f59;
+            border-radius: 10px;
+        }
+
+        #attachBtn,
+        #screenshotBtn {
+            position: relative;
+            z-index: 999 !important;
+            pointer-events: auto !important;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .quick-action-pill:hover {
-            background-color: #38414a;
-            border-color: #454f59;
-            color: #eceff4;
+        #userInput {
+            z-index: 1;
         }
-
-        /* Dropdowns */
-        .dropdown-select {
-            background-color: #2c333a;
-            border: 1px solid #454f59;
-            color: #eceff4;
-            border-radius: 4px;
-            padding: 6px 8px;
-            font-size: 11px;
-            outline: none;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .dropdown-select:focus {
-            border-color: #579dff;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #454f59; border-radius: 10px; }
     </style>
 </head>
 
 <body>
-    <div class="ai-container" id="main-wrapper">
-        
-        <div class="flex items-center justify-between mb-2">
+
+    <div class="ai-container p-4" id="main-wrapper">
+        <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-                <span class="text-[#00c2e0] text-lg">✦</span>
+                <span class="text-[#579dff] text-xl">✦</span>
                 <h3 class="font-semibold text-sm text-[#eceff4]">Comment AI</h3>
             </div>
             <button class="text-[#8c9bab] hover:text-white">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
             </button>
         </div>
-        <p class="text-xs text-[#8c9bab] mb-4">Get AI-powered insights and suggestions for your card</p>
 
-        <div id="attachmentsSection" class="hidden mb-3">
-            <p class="text-[11px] text-[#8c9bab] mb-2 font-semibold">Attached screenshots</p>
+        <p class="text-xs text-[#8c9bab] mb-3">Get AI-powered insights and suggestions for your card</p>
+
+        <div id="attachmentsSection" class="hidden mt-3">
+            <p class="text-[11px] text-[#8c9bab] mb-2">Attached screenshots</p>
             <div id="fileList" class="space-y-2"></div>
         </div>
 
-        <div class="input-box mb-4">
-            <textarea id="userInput" placeholder="Type your question or paste a screenshot..."></textarea>
-            
-            <div class="input-footer">
-                <div class="flex items-center gap-1">
-                    <button id="attachBtn" class="toolbar-btn">
-                        <span>📎 Attach</span>
-                    </button>
-                    <button id="screenshotBtn" class="toolbar-btn">
-                        <span>🖼️ Screenshot</span>
-                    </button>
-                </div>
-                
-                <button id="generateBtn" class="primary-btn">
-                    Ask Comment AI
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+        <br>
+
+        <div class="relative mb-4">
+            <textarea id="userInput" rows="4" class="w-full p-3 pb-12 rounded-md text-sm"
+                placeholder="Type your question or paste a screenshot..."></textarea>
+
+            <div class="absolute bottom-3 left-3 flex gap-3 text-[#8c9bab]">
+                <button id="attachBtn" class="flex items-center gap-1 text-xs hover:text-white">
+                    <small>📎 Attach Screenshot</small>
                 </button>
             </div>
+
+            <button id="generateBtn"
+                class="absolute bottom-5 right-2 primary-btn px-4 py-1.5 rounded-md text-xs flex items-center gap-2">
+                <span>Ask Comment AI</span>
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3">
+                    </path>
+                </svg>
+            </button>
         </div>
 
-        <div class="flex gap-2 mb-4">
-            <select id="filterSelect" class="dropdown-select">
+        <div class="flex gap-2 mb-4 w-full">
+            <select id="filterSelect" class="bg-[#2c333a] border border-[#454f59] text-[#b6c2cf] text-xs px-2 py-2 rounded focus:border-[#579dff] focus:outline-none flex-1 cursor-pointer">
                 <option value="">Format: Auto</option>
                 <option value="brief">Brief & Concise</option>
                 <option value="detailed">Highly Detailed</option>
@@ -204,7 +159,7 @@
                 <option value="actionable steps">Actionable Steps</option>
             </select>
             
-            <select id="templateSelect" class="dropdown-select">
+            <select id="templateSelect" class="bg-[#2c333a] border border-[#454f59] text-[#b6c2cf] text-xs px-2 py-2 rounded focus:border-[#579dff] focus:outline-none flex-1 cursor-pointer">
                 <option value="">Tone: Default</option>
                 <option value="technical">Technical / Developer</option>
                 <option value="professional">Professional / Client</option>
@@ -213,53 +168,65 @@
             </select>
         </div>
 
-        <p class="text-[11px] text-[#8c9bab] font-semibold mb-2">Quick actions</p>
-        <div class="flex flex-wrap gap-2 mb-4">
-            <button id="suggestBtn" class="quick-action-pill">💡 Suggest improvements</button>
-            <button id="subtasksBtn" class="quick-action-pill">📋 Break into subtasks</button>
-            <button class="quick-action-pill">👥 Assign team members</button>
+        <div class="flex flex-wrap gap-2 mb-2">
+            <button id="suggestBtn" class="quick-action-btn">💡 Suggest improvements</button>
+            <button id="subtasksBtn" class="quick-action-btn">📋 Break into subtasks</button>
+            <button id="assignBtn" class="quick-action-btn">👥 Assign team members</button>
         </div>
 
-        <div class="flex items-center justify-between mt-2 pt-2 border-t border-[#38414a]">
-            <div class="flex items-center gap-2 text-[10px] text-[#00c2e0] font-bold uppercase tracking-wider">
-                <span class="w-2 h-2 bg-[#00c2e0] rounded-full animate-pulse"></span>
+        <div class="flex items-center justify-between mt-4">
+            <div class="flex items-center gap-2 text-[10px] text-teal-400 font-bold uppercase tracking-wider">
+                <span class="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></span>
                 AI Ready
             </div>
             <span class="text-[10px] text-[#8c9bab]">Press Enter to send</span>
         </div>
 
-        <div id="processingScreen" class="hidden mt-4">
+        <div id="processingScreen" class="hidden mt-6">
             <div class="bg-[#22272b] border border-[#38414a] rounded-lg p-4">
+
                 <div class="flex justify-center mb-3">
                     <div class="flex gap-2">
-                        <div class="w-2 h-2 bg-[#00c2e0] rounded-full animate-bounce"></div>
-                        <div class="w-2 h-2 bg-[#00c2e0] rounded-full animate-bounce delay-75"></div>
-                        <div class="w-2 h-2 bg-[#00c2e0] rounded-full animate-bounce delay-150"></div>
+                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce delay-75"></div>
+                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce delay-150"></div>
                     </div>
                 </div>
-                <p class="text-center text-sm text-[#eceff4] font-semibold">Structuring your comment...</p>
-                <p class="text-center text-xs text-[#8c9bab] mb-4">This usually takes 5-10 seconds</p>
-                
-                <div class="bg-[#1d2125] rounded p-3 text-xs text-[#8c9bab] space-y-1">
-                    <p class="flex items-center gap-2"><span>👁️</span> Analyzing your context</p>
-                    <p id="processingScreenshots" class="flex items-center gap-2 pl-4 text-[#00c2e0]"></p>
-                    <p id="processingChars" class="flex items-center gap-2 pl-4 text-[#00c2e0]"></p>
-                    <p class="flex items-center gap-2"><span>✨</span> Generating actionable insights</p>
+
+                <p class="text-center text-sm text-[#b6c2cf] font-semibold">
+                    Structuring your comment...
+                </p>
+
+                <p class="text-center text-xs text-[#8c9bab] mb-4">
+                    This usually takes 5-10 seconds
+                </p>
+
+                <div class="bg-[#1d2125] border border-[#38414a] rounded p-3 text-xs">
+                    <p class="mb-1 flex items-center gap-2"><span>👁️</span> Analyzing your context</p>
+                    <p id="processingScreenshots" class="pl-5 text-[#579dff]"></p>
+                    <p id="processingChars" class="pl-5 text-[#579dff]"></p>
+                    <p class="mt-1 flex items-center gap-2"><span>✨</span> Generating actionable insights</p>
                 </div>
+
             </div>
         </div>
 
         <div id="outputSection" class="hidden mt-6 pt-4 border-t border-[#38414a]">
             <div class="flex justify-between items-center mb-2">
                 <label class="text-[10px] font-bold text-[#8c9bab] uppercase">AI-Generated Result</label>
-                <button id="copyBtn" class="text-[#579dff] text-[10px] hover:underline">Copy text</button>
+                <button id="copyBtn" class="text-blue-400 text-[10px] hover:underline">Copy text</button>
             </div>
-            <textarea id="aiOutput" class="bg-[#22272b] p-4 rounded border border-[#38414a] text-sm text-[#eceff4] w-full resize-y min-h-[150px] mb-2"></textarea>
+            <textarea id="aiOutput"
+                class="bg-[#22272b] p-4 rounded border border-[#38414a] text-sm text-[#eceff4] w-full resize-y min-h-[200px] max-h-[400px]"></textarea>
 
-            <button id="insertBtn" class="w-full mb-2 bg-[#579dff] hover:bg-[#85b8ff] text-[#1d2125] text-xs py-2 rounded font-semibold transition-colors">
+            <button id="insertBtn"
+                class="w-full mt-3 bg-[#2c333a] hover:bg-[#38414a] text-[#eceff4] text-xs py-2 rounded font-semibold border border-[#454f59]">
                 Insert as Comment
             </button>
-            <button id="insertDescBtn" class="w-full bg-[#2c333a] hover:bg-[#38414a] text-[#eceff4] text-xs py-2 rounded font-semibold border border-[#454f59] transition-colors">
+
+            <button id="insertDescBtn" class="w-full mt-2 bg-[#2c333a] hover:bg-[#38414a]
+ text-[#eceff4] text-xs py-2 rounded font-semibold
+ border border-[#454f59]">
                 Insert as Description
             </button>
         </div>
