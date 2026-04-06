@@ -12,7 +12,8 @@
         body {
             background-color: transparent;
             color: #b6c2cf;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Noto Sans", "Ubuntu", "Droid Sans", "Helvetica Neue", sans-serif;
+            /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Noto Sans", "Ubuntu", "Droid Sans", "Helvetica Neue", sans-serif; */
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -150,6 +151,26 @@
                     </path>
                 </svg>
             </button>
+        </div>
+
+        <div class="flex gap-2 mb-3 w-full">
+            <select id="filterSelect" class="bg-[#2c333a] border border-[#454f59] text-[#b6c2cf] text-xs px-2 py-1.5 rounded focus:border-[#579dff] focus:outline-none flex-1 cursor-pointer">
+                <option value="">Filter: Default</option>
+                <option value="brief">Brief</option>
+                <option value="detailed">Detailed</option>
+                <option value="more">Add more...</option>
+            </select>
+            
+            <select id="templateSelect" class="bg-[#2c333a] border border-[#454f59] text-[#b6c2cf] text-xs px-2 py-1.5 rounded focus:border-[#579dff] focus:outline-none flex-1 cursor-pointer">
+                <option value="">Template: Default</option>
+                <option value="technical">Technical</option>
+                <option value="professional">Professional</option>
+                <option value="more">Add more...</option>
+            </select>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-2">
+            <button id="suggestBtn" class="quick-action-btn">💡 Suggest improvements</button>
+            <button id="subtasksBtn" class="quick-action-btn">📋 Break into subtasks</button>
         </div>
 
 
