@@ -4,44 +4,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        /* Match Trello's Dark Theme Colors */
+        /* CSS Variables for Trello Dark Theme */
+        :root {
+            --bg-main: #1d2125;
+            --bg-panel: #22272b;
+            --bg-btn: #2c333a;
+            --bg-btn-hover: #38414a;
+            --border-color: #38414a;
+            --border-light: #454f59;
+            --text-main: #eceff4;
+            --text-muted: #8c9bab;
+            --text-blue: #579dff;
+            --text-blue-hover: #85b8ff;
+            --text-teal: #2dd4bf;
+        }
+
+        /* Base Resets */
         body {
             background-color: transparent;
-            color: #b6c2cf;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Noto Sans", "Ubuntu", "Droid Sans", "Helvetica Neue", sans-serif;
+            color: var(--text-muted);
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            box-sizing: border-box;
         }
 
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        /* JS Toggle Class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Main Container */
         .ai-container {
-            background: #1d2125;
+            background: var(--bg-main);
             padding: 16px;
-            border: 1px solid #38414a;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            transition: all 0.2s ease;
         }
 
-        textarea {
-            background: #22272b !important;
-            border: 1px solid #454f59 !important;
-            color: #eceff4 !important;
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-icon {
+            color: var(--text-blue);
+            font-size: 20px;
+        }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .close-btn {
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        /* Attachments Section */
+        .attachments-section {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .attachments-label {
+            font-size: 11px;
+            margin-bottom: 8px;
+            margin-top: 0;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Input Area */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        #userInput {
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            padding: 12px;
+            padding-bottom: 48px;
+            border-radius: 6px;
+            font-size: 14px;
             resize: none;
+            font-family: inherit;
         }
 
-        textarea:focus {
-            border-color: #579dff !important;
+        #userInput:focus {
+            border-color: var(--text-blue);
             outline: none;
-            box-shadow: 0 0 0 1px #579dff;
+            box-shadow: 0 0 0 1px var(--text-blue);
+        }
+
+        #userInput::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-actions {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .attach-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+            position: relative;
+            z-index: 999;
+        }
+
+        .attach-btn:hover {
+            color: #fff;
+        }
+
+        .generate-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 8px;
+            background: var(--text-blue);
+            color: var(--bg-main);
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+            z-index: 999;
+        }
+
+        .generate-btn:hover {
+            background: var(--text-blue-hover);
+        }
+
+        .generate-btn:disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* Dropdowns */
+        .dropdown-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .custom-select {
+            background: var(--bg-btn);
+            border: 1px solid var(--border-light);
+            color: #b6c2cf;
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            flex: 1;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .custom-select:focus {
+            border-color: var(--text-blue);
+        }
+
+        /* Quick Actions */
+        .quick-actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .quick-action-btn {
-            background: #2c333a;
-            border: 1px solid #454f59;
+            background: var(--bg-btn);
+            border: 1px solid var(--border-light);
             color: #b6c2cf;
             font-size: 12px;
             padding: 4px 12px;
@@ -49,172 +245,311 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
         }
 
         .quick-action-btn:hover {
-            background: #38414a;
+            background: var(--bg-btn-hover);
         }
 
-        .primary-btn {
-            background: #579dff;
-            color: #1d2125;
+        /* Status Indicator */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--text-teal);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-teal);
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .status-hint {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Processing Screen */
+        .processing-screen {
+            margin-top: 24px;
+        }
+
+        .processing-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .loader {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .loader-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-teal);
+            border-radius: 50%;
+            animation: bounce 1s infinite;
+        }
+
+        .loader-dot.d2 { animation-delay: 0.1s; }
+        .loader-dot.d3 { animation-delay: 0.2s; }
+
+        .processing-title {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-main);
             font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+
+        .processing-desc {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0 0 16px 0;
+        }
+
+        .processing-logs {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 4px 0;
+        }
+
+        .log-item.mt {
+            margin-top: 8px;
+        }
+
+        .log-sub {
+            padding-left: 24px;
+            color: var(--text-blue);
+            margin: 0 0 4px 0;
+        }
+
+        /* Output Section */
+        .output-section {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .output-label {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .copy-btn {
+            color: var(--text-blue);
+            font-size: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .copy-btn:hover {
+            text-decoration: underline;
+        }
+
+        #aiOutput {
+            width: 100%;
+            background: var(--bg-panel);
+            padding: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-main);
+            resize: vertical;
+            min-height: 200px;
+            max-height: 400px;
+            margin-bottom: 12px;
+            font-family: inherit;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: var(--bg-btn);
+            color: var(--text-main);
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            font-family: inherit;
             transition: background 0.2s;
         }
 
-        .primary-btn:hover {
-            background: #85b8ff;
+        .action-btn.mb {
+            margin-bottom: 8px;
         }
 
-        .primary-btn:disabled {
-            background: #38414a;
-            color: #8c9bab;
-            cursor: not-allowed;
+        .action-btn:hover {
+            background: var(--bg-btn-hover);
         }
 
-        /* Custom scrollbar for output */
-        #aiOutput::-webkit-scrollbar {
-            width: 6px;
+        /* Scrollbar styles */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
         }
 
-        #aiOutput::-webkit-scrollbar-track {
-            background: #1d2125;
-        }
-
-        #aiOutput::-webkit-scrollbar-thumb {
-            background: #454f59;
-            border-radius: 10px;
-        }
-
-        #attachBtn,
-        #screenshotBtn {
-            position: relative;
-            z-index: 999 !important;
-            pointer-events: auto !important;
-            cursor: pointer;
-        }
-
-        #userInput {
-            z-index: 1;
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+            50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="ai-container p-4" id="main-wrapper">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-                <span class="text-[#579dff] text-xl">✦</span>
-                <h3 class="font-semibold text-sm text-[#eceff4]">Comment AI</h3>
+    <div class="ai-container" id="main-wrapper">
+        
+        <div class="header">
+            <div class="header-title-group">
+                <span class="header-icon">✦</span>
+                <h3 class="header-title">Comment AI</h3>
             </div>
-            <button class="text-[#8c9bab] hover:text-white">
+            <button class="close-btn">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
         </div>
 
-        <p class="text-xs text-[#8c9bab] mb-3">Get AI-powered insights and suggestions for your card</p>
+        <p class="subtitle">Get AI-powered insights and suggestions for your card</p>
 
-        <div id="attachmentsSection" class="hidden mt-3">
-
-            <p class="text-[11px] text-[#8c9bab] mb-2">Attached screenshots</p>
-
-            <div id="fileList" class="space-y-2"></div>
-
+        <div id="attachmentsSection" class="attachments-section hidden">
+            <p class="attachments-label">Attached screenshots</p>
+            <div id="fileList" class="file-list"></div>
         </div>
 
-        <br>
+        <div class="input-wrapper">
+            <textarea id="userInput" rows="4" placeholder="Type your question or paste a screenshot..."></textarea>
 
-        <div class="relative mb-4">
-            <textarea id="userInput" rows="4" class="w-full p-3 pb-12 rounded-md text-sm"
-                placeholder="Type your question or paste a screenshot..."></textarea>
-
-            <div class="absolute bottom-3 left-3 flex gap-3 text-[#8c9bab]">
-                <button id="attachBtn" class="flex items-center gap-1 text-xs hover:text-white">
-                    <small>📎 Attach Screenshot</small>
+            <div class="input-actions">
+                <button id="attachBtn" class="attach-btn">
+                    📎 Attach Screenshot
                 </button>
-                <!-- <button id="screenshotBtn" class="flex items-center gap-1 text-xs hover:text-white">
-                    <small>🖼️ Screenshot</small>
-                </button> -->
             </div>
 
-            <button id="generateBtn"
-                class="absolute bottom-5 right-2 primary-btn px-4 py-1.5 rounded-md text-xs flex items-center gap-2">>
+            <button id="generateBtn" class="generate-btn">
                 <span>Ask Comment AI</span>
-                <br>
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3">
-                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
             </button>
         </div>
 
+        <div class="dropdown-row">
+            <select id="filterSelect" class="custom-select">
+                <option value="">Format: Auto</option>
+                <option value="brief">Brief & Concise</option>
+                <option value="detailed">Highly Detailed</option>
+                <option value="bullet points">Bullet Points</option>
+                <option value="actionable steps">Actionable Steps</option>
+            </select>
+            
+            <select id="templateSelect" class="custom-select">
+                <option value="">Tone: Default</option>
+                <option value="technical">Technical / Developer</option>
+                <option value="professional">Professional / Client</option>
+                <option value="constructive feedback">Constructive Feedback</option>
+                <option value="urgent priority">Urgent / High Priority</option>
+            </select>
+        </div>
 
-
-        <div class="flex flex-wrap gap-2 mb-2">
+        <div class="quick-actions-row">
             <button id="suggestBtn" class="quick-action-btn">💡 Suggest improvements</button>
             <button id="subtasksBtn" class="quick-action-btn">📋 Break into subtasks</button>
-            <!-- <button class="quick-action-btn">👤 Assign members</button> -->
+            <button id="assignBtn" class="quick-action-btn">👥 Assign team members</button>
         </div>
 
-        <div class="flex items-center justify-between mt-4">
-            <div class="flex items-center gap-2 text-[10px] text-green-500 font-bold uppercase tracking-wider">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        <div class="status-row">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
                 AI Ready
             </div>
-            <span class="text-[10px] text-[#8c9bab]">Press Enter to send</span>
+            <span class="status-hint">Press Enter to send</span>
         </div>
 
-        <div id="processingScreen" class="hidden mt-6">
-
-            <div class="bg-[#22272b] border border-[#38414a] rounded-lg p-4">
-
-                <div class="flex justify-center mb-3">
-                    <div class="flex gap-2">
-                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce"></div>
-                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce delay-75"></div>
-                        <div class="w-2 h-2 bg-teal-400 rounded-full animate-bounce delay-150"></div>
-                    </div>
+        <div id="processingScreen" class="processing-screen hidden">
+            <div class="processing-box">
+                <div class="loader">
+                    <div class="loader-dot d1"></div>
+                    <div class="loader-dot d2"></div>
+                    <div class="loader-dot d3"></div>
                 </div>
 
-                <p class="text-center text-sm text-[#b6c2cf] font-semibold">
-                    Structuring your comment...
-                </p>
+                <p class="processing-title">Structuring your comment...</p>
+                <p class="processing-desc">This usually takes 5-10 seconds</p>
 
-                <p class="text-center text-xs text-[#8c9bab] mb-4">
-                    This usually takes 30-60 seconds
-                </p>
-
-                <div class="bg-[#1d2125] border border-[#38414a] rounded p-3 text-xs">
-                    <p class="mb-1">Analyzing your context</p>
-                    <p id="processingScreenshots"></p>
-                    <p id="processingChars"></p>
-                    <p>Generating actionable insights</p>
+                <div class="processing-logs">
+                    <p class="log-item"><span>👁️</span> Analyzing your context</p>
+                    <p id="processingScreenshots" class="log-sub"></p>
+                    <p id="processingChars" class="log-sub"></p>
+                    <p class="log-item mt"><span>✨</span> Generating actionable insights</p>
                 </div>
-
             </div>
-
         </div>
 
-        <div id="outputSection" class="hidden mt-6 pt-4 border-t border-[#38414a]">
-            <div class="flex justify-between items-center mb-2">
-                <label class="text-[10px] font-bold text-[#8c9bab] uppercase">AI-Generated Result</label>
-                <button id="copyBtn" class="text-blue-400 text-[10px] hover:underline">Copy text</button>
+        <div id="outputSection" class="output-section hidden">
+            <div class="output-header">
+                <label class="output-label">AI-Generated Result</label>
+                <button id="copyBtn" class="copy-btn">Copy text</button>
             </div>
-            <textarea id="aiOutput"
-                class="bg-[#22272b] p-4 rounded border border-[#38414a] text-sm text-[#eceff4] w-full resize-y min-h-[200px] max-h-[400px]"></textarea>
+            
+            <textarea id="aiOutput"></textarea>
 
-            <button id="insertBtn"
-                class="w-full mt-3 bg-[#2c333a] hover:bg-[#38414a] text-[#eceff4] text-xs py-2 rounded font-semibold border border-[#454f59]">
+            <button id="insertBtn" class="action-btn mb">
                 Insert as Comment
             </button>
-
-            <button id="insertDescBtn" class="w-full mt-2 bg-[#2c333a] hover:bg-[#38414a]
- text-[#eceff4] text-xs py-2 rounded font-semibold
- border border-[#454f59]">
+            <button id="insertDescBtn" class="action-btn">
                 Insert as Description
             </button>
         </div>
