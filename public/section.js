@@ -109,80 +109,97 @@ if (ui.screenshotBtn) ui.screenshotBtn.addEventListener("click", openFilePicker)
 --------------------------*/
 
 if (ui.generateBtn) {
-ui.generateBtn.onclick = async () => {
+  ui.generateBtn.onclick = async () => {
 
-  const promptText = ui.userInput.value.trim();
+    const promptText = ui.userInput.value.trim();
 
-  if (!promptText) {
-    return t.alert({
-      message: "Please type something first!",
-      duration: 2
-    });
-  }
+    if (!promptText) {
+      return t.alert({
+        message: "Please type something first!",
+        duration: 2
+      });
+    }
 
-  const apiKey = await t.get("member", "private", "apiKey");
+    // --- ADD THIS LOGIC TO GRAB DROPDOWN VALUES ---
+    const filterSelect = document.getElementById("filterSelect");
+    const templateSelect = document.getElementById("templateSelect");
 
-  if (!apiKey) {
+    let finalPrompt = promptText;
 
-    t.alert({
-      message: "Please configure your API key.",
-      duration: 3
-    });
+    // Append filter constraints if selected
+    if (filterSelect && filterSelect.value && filterSelect.value !== "more") {
+      finalPrompt += `\n\nFormat requirement: Make the response ${filterSelect.value}.`;
+    }
 
-    return t.popup({
-      title: "Comment AI Settings",
-      url: "./settings.html",
-      height: 250
-    });
-  }
+    // Append template/tone constraints if selected
+    if (templateSelect && templateSelect.value && templateSelect.value !== "more") {
+      finalPrompt += `\nTone/Style requirement: Use a ${templateSelect.value} style.`;
+    }
+    // ----------------------------------------------
 
-  ui.outputSection.classList.add("hidden");
-  processingScreen.classList.remove("hidden");
-  ui.generateBtn.disabled = true;
+    const apiKey = await t.get("member", "private", "apiKey");
 
-  resize();
+    if (!apiKey) {
+      t.alert({
+        message: "Please configure your API key.",
+        duration: 3
+      });
 
-  try {
+      return t.popup({
+        title: "Comment AI Settings",
+        url: "./settings.html",
+        height: 250
+      });
+    }
 
-    const formData = new FormData();
-    formData.append("prompt", promptText);
-    formData.append("apiKey", apiKey);
+    ui.outputSection.classList.add("hidden");
+    processingScreen.classList.remove("hidden");
+    ui.generateBtn.disabled = true;
 
-    uploadedFiles.forEach(file => {
-      formData.append("screenshots", file);
-    });
-
-    const response = await fetch(
-      "https://commentai-trello.onrender.com/generate",
-      {
-        method: "POST",
-        body: formData
-      }
-    );
-
-    const data = await response.json();
-
-    ui.aiOutput.value = data.text || "No response returned.";
-
-    ui.outputSection.classList.remove("hidden");
-
-  } catch (err) {
-
-    console.error(err);
-
-    t.alert({
-      message: "Service temporarily unavailable.",
-      duration: 5
-    });
-
-  } finally {
-
-    processingScreen.classList.add("hidden");
-    ui.generateBtn.disabled = false;
     resize();
-  }
 
-};
+    try {
+      const formData = new FormData();
+
+      // UPDATE THIS LINE TO USE finalPrompt INSTEAD OF promptText
+      formData.append("prompt", finalPrompt);
+      formData.append("apiKey", apiKey);
+
+      uploadedFiles.forEach(file => {
+        formData.append("screenshots", file);
+      });
+
+      const response = await fetch(
+        "https://commentai-trello.onrender.com/generate",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+
+      ui.aiOutput.value = data.text || "No response returned.";
+
+      ui.outputSection.classList.remove("hidden");
+
+    } catch (err) {
+
+      console.error(err);
+
+      t.alert({
+        message: "Service temporarily unavailable.",
+        duration: 5
+      });
+
+    } finally {
+
+      processingScreen.classList.add("hidden");
+      ui.generateBtn.disabled = false;
+      resize();
+    }
+
+  };
 }
 
 /* -------------------------
@@ -222,7 +239,7 @@ function copyText(text) {
 
 if (ui.copyBtn) {
   ui.copyBtn.onclick = () => {
-   copyText(ui.aiOutput.value);
+    copyText(ui.aiOutput.value);
   };
 }
 
@@ -280,30 +297,30 @@ ui.insertBtn.onclick = insertComment;
 --------------------------*/
 
 if (ui.insertDescBtn) {
-ui.insertDescBtn.onclick = async () => {
+  ui.insertDescBtn.onclick = async () => {
 
-  const text = ui.aiOutput.value;
-  if (!text) return;
+    const text = ui.aiOutput.value;
+    if (!text) return;
 
-  const token = await getToken();
-  const card = await t.card("id");
+    const token = await getToken();
+    const card = await t.card("id");
 
-  await fetch(
-    `https://api.trello.com/1/cards/${card.id}?key=${TRELLO_KEY}&token=${token}`,
-    {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        desc: text
-      })
-    }
-  );
+    await fetch(
+      `https://api.trello.com/1/cards/${card.id}?key=${TRELLO_KEY}&token=${token}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          desc: text
+        })
+      }
+    );
 
-  t.alert({
-    message: "Description updated",
-    duration: 3
-  });
-};
+    t.alert({
+      message: "Description updated",
+      duration: 3
+    });
+  };
 }
 
 
