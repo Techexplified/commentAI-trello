@@ -7,12 +7,48 @@
 
 <body>
 
-    <script>
+<script>
 const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
+
+// Extract the badge logic into a reusable function
+function getUnreadBadge(t) {
+  return Promise.all([
+    t.card('badges'),
+    t.get('card', 'private', 'lastSeenComments', 0)
+  ])
+  .then(function(values) {
+    const cardData = values[0];
+    const lastSeenCount = values[1] || 0;
+    
+    // Fallback to 0 if badges/comments don't exist yet
+    const totalComments = (cardData && cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
+    const newComments = totalComments - lastSeenCount;
+
+    // If there are new comments, show the WhatsApp-style green bubble
+    if (newComments > 0) {
+      return [{
+        text: `${newComments} Unread`, // Text inside the badge
+        color: 'green' // Solid green pill (No icon makes it look more like a notification bubble)
+      }];
+    }
+    
+    return [];
+  });
+}
 
 window.TrelloPowerUp.initialize({
 
-/* BOARD BUTTON → API SETTINGS */
+/* 1. STATIC BADGES (Loaded when board opens) */
+'card-badges': function(t, options) {
+  return getUnreadBadge(t);
+},
+
+/* 2. DYNAMIC BADGES (Forces Trello to actively re-check for new comments) */
+'dynamic-card-badges': function(t, options) {
+  return getUnreadBadge(t);
+},
+
+/* 3. BOARD BUTTON */
 'board-buttons': function(t) {
   return [{
     icon: ICON,
@@ -27,36 +63,34 @@ window.TrelloPowerUp.initialize({
   }];
 },
 
-/* POWER-UPS MENU TOGGLE */
+/* 4. CARD BUTTON (MENU TOGGLE) */
 'card-buttons': function(t){
-
   return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
-
     return [{
       icon: ICON,
       text: enabled ? 'Remove Comment AI' : 'Add Comment AI',
-
       callback: function(t){
-
         return t.set('card','shared','commentAIEnabled', !enabled)
         .then(function(){
           return t.reload();
         });
-
       }
     }];
-
   });
-
 },
 
-/* COMMENT AI SECTION */
+/* 5. COMMENT AI SECTION & MARK AS READ LOGIC */
 'card-back-section': function(t){
+
+  // MARK AS READ: When card is opened, sync lastSeen with current total
+  t.card('badges').then(function(cardData) {
+    const totalComments = (cardData && cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
+    t.set('card', 'private', 'lastSeenComments', totalComments);
+  });
 
   return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
-
     if(!enabled){
       return null;
     }
@@ -80,12 +114,10 @@ window.TrelloPowerUp.initialize({
         }
       }
     };
-
   });
-
 },
 
-/* BOARD MENU SETTINGS */
+/* 6. SETTINGS MENU */
 'show-settings': function(t) {
   return t.popup({
     title: 'Comment AI Settings',
