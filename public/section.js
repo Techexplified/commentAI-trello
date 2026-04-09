@@ -151,10 +151,11 @@ if (ui.generateBtn) {
         formData.append("screenshots", file);
       });
 
-      const response = await fetch("https://commentai-trello.onrender.com/generate", {
+      const response = await fetch("https://trello-commentai.onrender.com/generate", {
         method: "POST",
         body: formData
       });
+      
 
       const data = await response.json();
 
