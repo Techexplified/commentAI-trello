@@ -227,20 +227,32 @@ if (ui.insertBtn) {
     const text = ui.aiOutput.value;
     if (!text) return;
 
+    ui.insertBtn.innerText = "Inserting..."; // UI feedback
+
     try {
       const token = await getToken();
       const card = await t.card("id");
 
-      await fetch(`https://api.trello.com/1/cards/${card.id}/actions/comments?key=${TRELLO_KEY}&token=${token}`, {
+      // FIXED: Using URLSearchParams (Form Data) which Trello prefers over JSON
+      const params = new URLSearchParams();
+      params.append("key", TRELLO_KEY);
+      params.append("token", token);
+      params.append("text", text);
+
+      const response = await fetch(`https://api.trello.com/1/cards/${card.id}/actions/comments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        headers: { "Accept": "application/json" },
+        body: params
       });
 
-      t.alert({ message: "Comment added successfully", duration: 3 });
+      if (!response.ok) throw new Error(`Trello API Error: ${response.status}`);
+
+      t.alert({ message: "Comment added successfully!", duration: 3 });
     } catch (err) {
       console.error("Error inserting comment:", err);
-      t.alert({ message: "Failed to add comment. Check authentication.", duration: 3 });
+      t.alert({ message: "Failed to add comment.", duration: 3, display: "error" });
+    } finally {
+      ui.insertBtn.innerText = "Insert as Comment"; // Reset UI
     }
   };
 }
@@ -250,53 +262,32 @@ if (ui.insertDescBtn) {
     const text = ui.aiOutput.value;
     if (!text) return;
 
+    ui.insertDescBtn.innerText = "Inserting..."; // UI feedback
+
     try {
       const token = await getToken();
       const card = await t.card("id");
 
-      await fetch(`https://api.trello.com/1/cards/${card.id}?key=${TRELLO_KEY}&token=${token}`, {
+      // FIXED: Using URLSearchParams for the Description PUT request
+      const params = new URLSearchParams();
+      params.append("key", TRELLO_KEY);
+      params.append("token", token);
+      params.append("desc", text);
+
+      const response = await fetch(`https://api.trello.com/1/cards/${card.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ desc: text })
+        headers: { "Accept": "application/json" },
+        body: params
       });
 
-      t.alert({ message: "Description updated", duration: 3 });
+      if (!response.ok) throw new Error(`Trello API Error: ${response.status}`);
+
+      t.alert({ message: "Description updated!", duration: 3 });
     } catch (err) {
       console.error("Error updating description:", err);
-      t.alert({ message: "Failed to update description.", duration: 3 });
+      t.alert({ message: "Failed to update description.", duration: 3, display: "error" });
+    } finally {
+      ui.insertDescBtn.innerText = "Insert as Description"; // Reset UI
     }
-  };
-}
-
-/* -------------------------
-   ENTER TO SEND
---------------------------*/
-if (ui.userInput) {
-  ui.userInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (!ui.generateBtn.disabled) {
-        ui.generateBtn.click();
-      }
-    }
-  });
-}
-
-/* -------------------------
-   QUICK ACTIONS
---------------------------*/
-if (ui.suggestBtn) {
-  ui.suggestBtn.onclick = () => {
-    const text = ui.userInput.value.trim();
-    ui.userInput.value = "Suggest improvements for the following task or description:\n\n" + text;
-    ui.generateBtn.click();
-  };
-}
-
-if (ui.subtasksBtn) {
-  ui.subtasksBtn.onclick = () => {
-    const text = ui.userInput.value.trim();
-    ui.userInput.value = "Break this task into clear actionable subtasks:\n\n" + text;
-    ui.generateBtn.click();
   };
 }
