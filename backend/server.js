@@ -40,7 +40,7 @@ app.post("/generate", upload.array("screenshots"), async (req, res) => {
 
     // FIXED: Using the correct, stable Gemini model
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash"
+      model: "gemini-2.5-flash"
     });
 
     const parts = [{ text: prompt }];
