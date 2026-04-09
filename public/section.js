@@ -156,11 +156,9 @@ if (ui.generateBtn) {
         body: formData
       });
 
-      // Decode the backend response first so we can read the actual error
       const data = await response.json();
 
       if (!response.ok) {
-        // Throw the EXACT error message the backend sent us
         throw new Error(data.error || `Server returned status ${response.status}`);
       }
 
@@ -169,8 +167,14 @@ if (ui.generateBtn) {
 
     } catch (err) {
       console.error("Caught Error:", err);
-      // Display the real error in the Trello popup alert
-      t.alert({ message: `API Error: ${err.message}`, duration: 6, display: 'error' });
+      
+      // FIXED: Trello alerts crash if the message is over 140 characters. This truncates it safely.
+      let safeMessage = `API Error: ${err.message}`;
+      if (safeMessage.length > 135) {
+        safeMessage = safeMessage.substring(0, 135) + "...";
+      }
+      
+      t.alert({ message: safeMessage, duration: 6, display: 'error' });
     } finally {
       processingScreen.classList.add("hidden");
       ui.generateBtn.disabled = false;
