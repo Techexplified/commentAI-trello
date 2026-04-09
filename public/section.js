@@ -1,21 +1,23 @@
 const t = window.TrelloPowerUp.iframe();
 
-const TRELLO_KEY = "9c85fa65404b1200d1e41975b2b7e439";
+const TRELLO_KEY = "9c85fa65404b1200d1e41975b2b7e439"; // Your Trello API Key
 
 /* -------------------------
    UI ELEMENTS
 --------------------------*/
-
 const ui = {
   userInput: document.getElementById("userInput"),
   generateBtn: document.getElementById("generateBtn"),
   outputSection: document.getElementById("outputSection"),
   aiOutput: document.getElementById("aiOutput"),
   attachBtn: document.getElementById("attachBtn"),
-  screenshotBtn: document.getElementById("screenshotBtn"),
   insertBtn: document.getElementById("insertBtn"),
   copyBtn: document.getElementById("copyBtn"),
-  insertDescBtn: document.getElementById("insertDescBtn")
+  insertDescBtn: document.getElementById("insertDescBtn"),
+  filterSelect: document.getElementById("filterSelect"),
+  templateSelect: document.getElementById("templateSelect"),
+  suggestBtn: document.getElementById("suggestBtn"),
+  subtasksBtn: document.getElementById("subtasksBtn")
 };
 
 const attachmentsSection = document.getElementById("attachmentsSection");
@@ -29,7 +31,6 @@ let uploadedFiles = [];
 /* -------------------------
    RESIZE TRELLO IFRAME
 --------------------------*/
-
 const resize = () => {
   t.sizeTo("#main-wrapper").done();
 };
@@ -44,7 +45,6 @@ if (ui.userInput) {
 /* -------------------------
    FILE PICKER
 --------------------------*/
-
 function openFilePicker(e) {
   e.preventDefault();
 
@@ -57,31 +57,31 @@ function openFilePicker(e) {
     const files = Array.from(input.files);
 
     files.forEach(file => {
-
       uploadedFiles.push(file);
 
       const fileItem = document.createElement("div");
-
-      fileItem.className =
-        "flex items-center justify-between bg-[#22272b] border border-[#38414a] rounded p-2 text-xs";
+      fileItem.className = "log-item"; // Matches our vanilla CSS
+      fileItem.style.justifyContent = "space-between";
+      fileItem.style.background = "var(--bg-panel)";
+      fileItem.style.padding = "6px 8px";
+      fileItem.style.borderRadius = "4px";
+      fileItem.style.border = "1px solid var(--border-color)";
 
       fileItem.innerHTML = `
-        <div class="flex items-center gap-2">
+        <div style="display: flex; align-items: center; gap: 8px;">
           <span>🖼️</span>
           <span>${file.name}</span>
         </div>
-        <button class="text-red-400 hover:text-red-300 text-[10px]">Remove</button>
+        <button style="color: #f87171; background: none; border: none; cursor: pointer; font-size: 10px;">Remove</button>
       `;
 
       fileItem.querySelector("button").onclick = () => {
-
         uploadedFiles = uploadedFiles.filter(f => f !== file);
         fileItem.remove();
 
         if (uploadedFiles.length === 0) {
           attachmentsSection.classList.add("hidden");
         }
-
         resize();
       };
 
@@ -89,12 +89,7 @@ function openFilePicker(e) {
     });
 
     attachmentsSection.classList.remove("hidden");
-
-    t.alert({
-      message: `${files.length} file(s) added`,
-      duration: 2
-    });
-
+    t.alert({ message: `${files.length} file(s) added`, duration: 2 });
     resize();
   };
 
@@ -102,138 +97,107 @@ function openFilePicker(e) {
 }
 
 if (ui.attachBtn) ui.attachBtn.addEventListener("click", openFilePicker);
-if (ui.screenshotBtn) ui.screenshotBtn.addEventListener("click", openFilePicker);
 
 /* -------------------------
    AI GENERATION
 --------------------------*/
-
 if (ui.generateBtn) {
   ui.generateBtn.onclick = async () => {
+    
+    let promptText = ui.userInput.value.trim();
 
-    const promptText = ui.userInput.value.trim();
-
-    if (!promptText) {
-      return t.alert({
-        message: "Please type something first!",
-        duration: 2
-      });
+    // Prevent empty requests unless an image is attached
+    if (!promptText && uploadedFiles.length === 0) {
+      return t.alert({ message: "Please type something or attach a screenshot first!", duration: 2 });
     }
 
-    // --- ADD THIS LOGIC TO GRAB DROPDOWN VALUES ---
-    const filterSelect = document.getElementById("filterSelect");
-    const templateSelect = document.getElementById("templateSelect");
+    // If there is an image but no text, provide a default instruction
+    if (!promptText && uploadedFiles.length > 0) {
+      promptText = "Please analyze the attached image(s).";
+    }
 
+    // --- SAFELY BUILD THE PROMPT WITH FILTERS ---
     let finalPrompt = promptText;
 
-    // Append filter constraints if selected
-    if (filterSelect && filterSelect.value && filterSelect.value !== "more") {
-      finalPrompt += `\n\nFormat requirement: Make the response ${filterSelect.value}.`;
+    if (ui.filterSelect && ui.filterSelect.value) {
+      // Grabs the actual text of the dropdown (e.g., "Brief & Concise")
+      const filterText = ui.filterSelect.options[ui.filterSelect.selectedIndex].text;
+      finalPrompt += `\n\nFormat Requirement: Make the response ${filterText}.`;
     }
 
-    // Append template/tone constraints if selected
-    if (templateSelect && templateSelect.value && templateSelect.value !== "more") {
-      finalPrompt += `\nTone/Style requirement: Use a ${templateSelect.value} style.`;
+    if (ui.templateSelect && ui.templateSelect.value) {
+      const templateText = ui.templateSelect.options[ui.templateSelect.selectedIndex].text;
+      finalPrompt += `\n\nTone/Style Requirement: Use a ${templateText} style.`;
     }
-    // ----------------------------------------------
+    // --------------------------------------------
 
     const apiKey = await t.get("member", "private", "apiKey");
 
     if (!apiKey) {
-      t.alert({
-        message: "Please configure your API key.",
-        duration: 3
-      });
-
-      return t.popup({
-        title: "Comment AI Settings",
-        url: "./settings.html",
-        height: 250
-      });
+      t.alert({ message: "Please configure your API key.", duration: 3 });
+      return t.popup({ title: "Comment AI Settings", url: "./settings.html", height: 480 });
     }
 
+    // UI Updates for Loading State
     ui.outputSection.classList.add("hidden");
     processingScreen.classList.remove("hidden");
     ui.generateBtn.disabled = true;
+    
+    if (processingScreenshots) processingScreenshots.innerText = `• ${uploadedFiles.length} screenshots attached`;
+    if (processingChars) processingChars.innerText = `• ${finalPrompt.length} characters of context provided`;
 
     resize();
 
     try {
       const formData = new FormData();
-
-      // UPDATE THIS LINE TO USE finalPrompt INSTEAD OF promptText
-      formData.append("prompt", finalPrompt);
+      formData.append("prompt", finalPrompt); // Safely pass the combined string
       formData.append("apiKey", apiKey);
 
       uploadedFiles.forEach(file => {
         formData.append("screenshots", file);
       });
 
-      const response = await fetch(
-        "https://commentai-trello.onrender.com/generate",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      const response = await fetch("https://commentai-trello.onrender.com/generate", {
+        method: "POST",
+        body: formData
+      });
+
+      // If the backend throws a 500, catch it safely
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
 
       const data = await response.json();
 
       ui.aiOutput.value = data.text || "No response returned.";
-
       ui.outputSection.classList.remove("hidden");
 
     } catch (err) {
-
       console.error(err);
-
-      t.alert({
-        message: "Service temporarily unavailable.",
-        duration: 5
-      });
-
+      t.alert({ message: "Service temporarily unavailable. Please try again.", duration: 5 });
     } finally {
-
       processingScreen.classList.add("hidden");
       ui.generateBtn.disabled = false;
       resize();
     }
-
   };
 }
 
 /* -------------------------
    COPY TEXT
 --------------------------*/
-
 function copyText(text) {
-
   try {
-
     const textarea = document.createElement("textarea");
-
     textarea.value = text;
-
     document.body.appendChild(textarea);
     textarea.select();
-
     document.execCommand("copy");
-
     document.body.removeChild(textarea);
-
-    t.alert({
-      message: "Copied!",
-      duration: 2
-    });
-
+    t.alert({ message: "Copied to clipboard!", duration: 2 });
   } catch (err) {
-
     console.error(err);
-
-    t.alert({
-      message: "Copy failed",
-      duration: 3
-    });
+    t.alert({ message: "Copy failed", duration: 3 });
   }
 }
 
@@ -244,133 +208,95 @@ if (ui.copyBtn) {
 }
 
 /* -------------------------
-   INSERT AS COMMENT
+   INSERT ACTIONS (COMMENT & DESC)
 --------------------------*/
 async function getToken() {
-
   let token = await t.get("member", "private", "token");
   if (token) return token;
 
   const returnUrl = window.location.origin + "/token-success.html";
+  const authUrl = `https://trello.com/1/authorize?expiration=never&name=CommentAI&scope=read,write&response_type=token&key=${TRELLO_KEY}&return_url=${encodeURIComponent(returnUrl)}`;
 
-  const authUrl =
-    `https://trello.com/1/authorize?expiration=never&name=CommentAI&scope=read,write&response_type=token&key=${TRELLO_KEY}&return_url=${encodeURIComponent(returnUrl)}`;
-
-  token = await t.authorize(authUrl, {
-    height: 680,
-    width: 580,
-    validToken: /.+/
-  });
-
+  token = await t.authorize(authUrl, { height: 680, width: 580, validToken: /.+/ });
   await t.set("member", "private", "token", token);
-
   return token;
 }
 
-async function insertComment() {
-
-  const text = ui.aiOutput.value;
-  if (!text) return;
-
-  const token = await getToken();
-  const card = await t.card("id");
-
-  await fetch(
-    `https://api.trello.com/1/cards/${card.id}/actions/comments?key=${TRELLO_KEY}&token=${token}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
-    }
-  );
-
-  t.alert({
-    message: "Comment added",
-    duration: 3
-  });
-}
-
-ui.insertBtn.onclick = insertComment;
-
-/* -------------------------
-   INSERT AS DESCRIPTION
---------------------------*/
-
-if (ui.insertDescBtn) {
-  ui.insertDescBtn.onclick = async () => {
-
+if (ui.insertBtn) {
+  ui.insertBtn.onclick = async () => {
     const text = ui.aiOutput.value;
     if (!text) return;
 
-    const token = await getToken();
-    const card = await t.card("id");
+    try {
+      const token = await getToken();
+      const card = await t.card("id");
 
-    await fetch(
-      `https://api.trello.com/1/cards/${card.id}?key=${TRELLO_KEY}&token=${token}`,
-      {
-        method: "PUT",
+      await fetch(`https://api.trello.com/1/cards/${card.id}/actions/comments?key=${TRELLO_KEY}&token=${token}`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          desc: text
-        })
-      }
-    );
+        body: JSON.stringify({ text })
+      });
 
-    t.alert({
-      message: "Description updated",
-      duration: 3
-    });
+      t.alert({ message: "Comment added successfully", duration: 3 });
+    } catch (err) {
+      console.error("Error inserting comment:", err);
+      t.alert({ message: "Failed to add comment. Check authentication.", duration: 3 });
+    }
   };
 }
 
+if (ui.insertDescBtn) {
+  ui.insertDescBtn.onclick = async () => {
+    const text = ui.aiOutput.value;
+    if (!text) return;
+
+    try {
+      const token = await getToken();
+      const card = await t.card("id");
+
+      await fetch(`https://api.trello.com/1/cards/${card.id}?key=${TRELLO_KEY}&token=${token}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ desc: text })
+      });
+
+      t.alert({ message: "Description updated", duration: 3 });
+    } catch (err) {
+      console.error("Error updating description:", err);
+      t.alert({ message: "Failed to update description.", duration: 3 });
+    }
+  };
+}
 
 /* -------------------------
    ENTER TO SEND
 --------------------------*/
-
-ui.userInput.addEventListener("keydown", function (e) {
-
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-
-    if (!ui.generateBtn.disabled) {
-      ui.generateBtn.click();
+if (ui.userInput) {
+  ui.userInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!ui.generateBtn.disabled) {
+        ui.generateBtn.click();
+      }
     }
-  }
-
-});
+  });
+}
 
 /* -------------------------
    QUICK ACTIONS
 --------------------------*/
-
-const suggestBtn = document.getElementById("suggestBtn");
-const subtasksBtn = document.getElementById("subtasksBtn");
-
-if (suggestBtn) {
-
-  suggestBtn.onclick = () => {
-
+if (ui.suggestBtn) {
+  ui.suggestBtn.onclick = () => {
     const text = ui.userInput.value.trim();
-
-    ui.userInput.value =
-      "Suggest improvements for the following task or description:\n\n" + text;
-
+    ui.userInput.value = "Suggest improvements for the following task or description:\n\n" + text;
     ui.generateBtn.click();
   };
-
 }
 
-if (subtasksBtn) {
-
-  subtasksBtn.onclick = () => {
-
+if (ui.subtasksBtn) {
+  ui.subtasksBtn.onclick = () => {
     const text = ui.userInput.value.trim();
-
-    ui.userInput.value =
-      "Break this task into clear actionable subtasks:\n\n" + text;
-
+    ui.userInput.value = "Break this task into clear actionable subtasks:\n\n" + text;
     ui.generateBtn.click();
   };
-
 }
