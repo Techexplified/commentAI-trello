@@ -1,6 +1,6 @@
 const t = window.TrelloPowerUp.iframe();
 
-const TRELLO_KEY = "9c85fa65404b1200d1e41975b2b7e439"; // Your Trello API Key
+const TRELLO_KEY = "9c85fa65404b1200d1e41975b2b7e439"; 
 
 /* -------------------------
    UI ELEMENTS
@@ -60,7 +60,7 @@ function openFilePicker(e) {
       uploadedFiles.push(file);
 
       const fileItem = document.createElement("div");
-      fileItem.className = "log-item"; // Matches our vanilla CSS
+      fileItem.className = "log-item"; 
       fileItem.style.justifyContent = "space-between";
       fileItem.style.background = "var(--bg-panel)";
       fileItem.style.padding = "6px 8px";
@@ -106,21 +106,17 @@ if (ui.generateBtn) {
     
     let promptText = ui.userInput.value.trim();
 
-    // Prevent empty requests unless an image is attached
     if (!promptText && uploadedFiles.length === 0) {
       return t.alert({ message: "Please type something or attach a screenshot first!", duration: 2 });
     }
 
-    // If there is an image but no text, provide a default instruction
     if (!promptText && uploadedFiles.length > 0) {
       promptText = "Please analyze the attached image(s).";
     }
 
-    // --- SAFELY BUILD THE PROMPT WITH FILTERS ---
     let finalPrompt = promptText;
 
     if (ui.filterSelect && ui.filterSelect.value) {
-      // Grabs the actual text of the dropdown (e.g., "Brief & Concise")
       const filterText = ui.filterSelect.options[ui.filterSelect.selectedIndex].text;
       finalPrompt += `\n\nFormat Requirement: Make the response ${filterText}.`;
     }
@@ -129,7 +125,6 @@ if (ui.generateBtn) {
       const templateText = ui.templateSelect.options[ui.templateSelect.selectedIndex].text;
       finalPrompt += `\n\nTone/Style Requirement: Use a ${templateText} style.`;
     }
-    // --------------------------------------------
 
     const apiKey = await t.get("member", "private", "apiKey");
 
@@ -138,7 +133,6 @@ if (ui.generateBtn) {
       return t.popup({ title: "Comment AI Settings", url: "./settings.html", height: 480 });
     }
 
-    // UI Updates for Loading State
     ui.outputSection.classList.add("hidden");
     processingScreen.classList.remove("hidden");
     ui.generateBtn.disabled = true;
@@ -150,7 +144,7 @@ if (ui.generateBtn) {
 
     try {
       const formData = new FormData();
-      formData.append("prompt", finalPrompt); // Safely pass the combined string
+      formData.append("prompt", finalPrompt); 
       formData.append("apiKey", apiKey);
 
       uploadedFiles.forEach(file => {
@@ -162,19 +156,21 @@ if (ui.generateBtn) {
         body: formData
       });
 
-      // If the backend throws a 500, catch it safely
-      if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
-      }
-
+      // Decode the backend response first so we can read the actual error
       const data = await response.json();
+
+      if (!response.ok) {
+        // Throw the EXACT error message the backend sent us
+        throw new Error(data.error || `Server returned status ${response.status}`);
+      }
 
       ui.aiOutput.value = data.text || "No response returned.";
       ui.outputSection.classList.remove("hidden");
 
     } catch (err) {
-      console.error(err);
-      t.alert({ message: "Service temporarily unavailable. Please try again.", duration: 5 });
+      console.error("Caught Error:", err);
+      // Display the real error in the Trello popup alert
+      t.alert({ message: `API Error: ${err.message}`, duration: 6, display: 'error' });
     } finally {
       processingScreen.classList.add("hidden");
       ui.generateBtn.disabled = false;
