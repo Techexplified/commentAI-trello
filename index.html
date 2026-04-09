@@ -10,60 +10,90 @@
 <script>
 const ICON = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
 
-// Extract the badge logic into a reusable function
-function getUnreadBadge(t) {
-  return Promise.all([
-    t.card('badges'),
-    t.get('card', 'private', 'lastSeenComments', 0)
-  ])
-  .then(function(values) {
-    const cardData = values[0];
-    const lastSeenCount = values[1] || 0;
-    
-    // Fallback to 0 if badges/comments don't exist yet
-    const totalComments = (cardData && cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
-    const newComments = totalComments - lastSeenCount;
-
-    // If there are new comments, show the WhatsApp-style green bubble
-    if (newComments > 0) {
-      return [{
-        text: `${newComments} Unread`, // Text inside the badge
-        color: 'green' // Solid green pill (No icon makes it look more like a notification bubble)
-      }];
-    }
-    
-    return [];
-  });
-}
-
 window.TrelloPowerUp.initialize({
 
-/* 1. STATIC BADGES (Loaded when board opens) */
-'card-badges': function(t, options) {
-  return getUnreadBadge(t);
-},
-
-/* 2. DYNAMIC BADGES (Forces Trello to actively re-check for new comments) */
-'dynamic-card-badges': function(t, options) {
-  return getUnreadBadge(t);
-},
-
-/* 3. BOARD BUTTON */
+/* 1. BOARD BUTTON (Calculates Global Unread Count) */
 'board-buttons': function(t) {
-  return [{
-    icon: ICON,
-    text: 'Comment AI',
-    callback: function(t) {
-      return t.popup({
-        title: 'Comment AI Settings',
-        url: './settings.html',
-        height: 250
+  return Promise.all([
+    t.cards('id', 'badges'), // Gets all cards on the board
+    t.get('board', 'private', 'seenCommentsMap', {}), // FIXED VISIBILITY
+    t.get('board', 'private', 'showBoardUnread', true) // FIXED VISIBILITY
+  ])
+  .then(function([cards, seenMap, showBoardUnread]) {
+    
+    let btnText = 'Comment AI';
+    let totalUnread = 0;
+
+    // Calculate total unread across all cards
+    if (showBoardUnread) {
+        cards.forEach(card => {
+            const total = (card.badges && card.badges.comments) ? card.badges.comments : 0;
+            const seen = seenMap[card.id] || 0;
+            if (total > seen) {
+                totalUnread += (total - seen);
+            }
+        });
+        
+        if (totalUnread > 0) {
+            btnText = `Comment AI (${totalUnread} Unread)`;
+        }
+    }
+
+    return [{
+      icon: ICON,
+      text: btnText,
+      callback: function(t) {
+        return t.popup({
+          title: 'Comment AI Settings',
+          url: './settings.html',
+          height: 480
+        });
+      }
+    }];
+  });
+},
+
+/* 2. CARD BADGES (Front of the Card) */
+'card-badges': function(t, options) {
+  return Promise.all([
+    t.card('id', 'badges'),
+    t.get('board', 'private', 'seenCommentsMap', {}), // FIXED VISIBILITY
+    t.get('board', 'private', 'showCardUnread', true), // FIXED VISIBILITY
+    t.get('board', 'private', 'showTotalBadge', false) // FIXED VISIBILITY
+  ])
+  .then(function([cardData, seenMap, showCardUnread, showTotalBadge]) {
+    
+    const badgesToReturn = [];
+    const totalComments = (cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
+    const seen = seenMap[cardData.id] || 0;
+    const newComments = totalComments - seen;
+
+    // 1. Unread Badge
+    if (showCardUnread && newComments > 0) {
+      badgesToReturn.push({
+        text: `${newComments} Unread`,
+        color: 'green' 
       });
     }
-  }];
+
+    // 2. Custom Total Comments Badge (If toggled on)
+    if (showTotalBadge && totalComments > 0) {
+      badgesToReturn.push({
+        text: `Total: ${totalComments}`,
+        color: 'light-gray'
+      });
+    }
+    
+    return badgesToReturn;
+  });
 },
 
-/* 4. CARD BUTTON (MENU TOGGLE) */
+// Dynamic trigger so badges re-render immediately
+'dynamic-card-badges': function(t, options) {
+    return this['card-badges'](t, options);
+},
+
+/* 3. CARD BUTTON (MENU TOGGLE) */
 'card-buttons': function(t){
   return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
@@ -80,20 +110,33 @@ window.TrelloPowerUp.initialize({
   });
 },
 
-/* 5. COMMENT AI SECTION & MARK AS READ LOGIC */
+/* 4. COMMENT AI SECTION & MARK AS READ LOGIC */
 'card-back-section': function(t){
 
-  // MARK AS READ: When card is opened, sync lastSeen with current total
-  t.card('badges').then(function(cardData) {
-    const totalComments = (cardData && cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
-    t.set('card', 'private', 'lastSeenComments', totalComments);
+  // MARK AS READ: When card opens, update the board-level seen map
+  Promise.all([
+      t.card('id', 'badges'),
+      t.get('board', 'private', 'seenCommentsMap', {}) // FIXED VISIBILITY
+  ]).then(function([cardData, seenMap]) {
+      const totalComments = (cardData.badges && cardData.badges.comments) ? cardData.badges.comments : 0;
+      
+      if (seenMap[cardData.id] !== totalComments) {
+          seenMap[cardData.id] = totalComments;
+          
+          // Cleanup to save storage space (Remove tracking for 0 comments)
+          Object.keys(seenMap).forEach(key => {
+              if (seenMap[key] === 0) delete seenMap[key];
+          });
+
+          // Save the map back to Trello
+          t.set('board', 'private', 'seenCommentsMap', seenMap); // FIXED VISIBILITY
+      }
   });
 
+  // Render the Section
   return t.get('card','shared','commentAIEnabled', true)
   .then(function(enabled){
-    if(!enabled){
-      return null;
-    }
+    if(!enabled) return null;
 
     return {
       title: 'Comment AI',
@@ -109,7 +152,7 @@ window.TrelloPowerUp.initialize({
           return t.popup({
             title: 'Comment AI Settings',
             url: './settings.html',
-            height: 250
+            height: 480
           });
         }
       }
@@ -117,12 +160,12 @@ window.TrelloPowerUp.initialize({
   });
 },
 
-/* 6. SETTINGS MENU */
+/* 5. SETTINGS MENU */
 'show-settings': function(t) {
   return t.popup({
     title: 'Comment AI Settings',
     url: './settings.html',
-    height: 250
+    height: 480
   });
 }
 
